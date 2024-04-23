@@ -14,6 +14,13 @@ void Player::Initialize(Model* model, uint32_t textureHandle) {//NULLポイン�
 	input_ = Input::GetInstance();
 }
 
+Player::~Player() { 
+	
+	for (PlayerBullet* bullet : bullets_) {
+		delete bullet;
+	}
+	}
+
 Vector3 Add(Vector3 v1, Vector3 v2) { 
 	Vector3 result{};
 	result.x = v1.x + v2.x;
@@ -223,8 +230,8 @@ void Player::Update() {
 	Attack();
 
 	//弾の更新処理
-	if (bullet_) {
-		bullet_->Update();
+	for (PlayerBullet* bullet : bullets_) {
+		bullet->Update();
 	}
 
 	//移動限界座標
@@ -266,12 +273,13 @@ void Player::Rotate() {
 
 void Player::Attack() {
 	if (input_->PushKey(DIK_SPACE)) {
+		
 		//弾を生成し、初期化
 		PlayerBullet* newBullet = new PlayerBullet();
 		newBullet->Initialize(model_, worldTranshorm_.translation_);
 
 		//弾を登録する
-		bullet_ = newBullet;
+		bullets_.push_back(newBullet);
 	}
 }
 
@@ -279,8 +287,8 @@ void Player::Draw(ViewProjection& viewProjection) {
 	model_->Draw(worldTranshorm_, viewProjection, textureHandle_); 
 
 	//弾描画
-	if (bullet_) {
-		bullet_->Draw(viewProjection);
+	for (PlayerBullet* bullet : bullets_) {
+		bullet->Draw(viewProjection);
 	}
 }
 

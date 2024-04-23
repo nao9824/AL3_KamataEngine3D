@@ -41,7 +41,6 @@ void GameScene::Initialize() {
 void GameScene::Update() {
 //自キャラの更新
 	player_->Update();
-//player_->Rotate();
 
 	#ifdef _DEBUG
 	if (input_->TriggerKey(DIK_E)) {

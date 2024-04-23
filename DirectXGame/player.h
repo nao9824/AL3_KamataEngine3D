@@ -3,6 +3,7 @@
 #include "WorldTransform.h"
 #include "Input.h"
 #include "PlayerBullet.h"
+#include <list>
 
 // ベクトルとベクトルの足し算
 Vector3 Add(Vector3 v1, Vector3 v2);
@@ -32,6 +33,11 @@ public:
 	void Initialize(Model* model,uint32_t textureHandle);
 
 	///< summary>
+	/// デストラクタ
+	///< summary>
+	~Player();
+
+	///< summary>
 	/// 更新
 	///< summary>
 	void Update();
@@ -47,6 +53,7 @@ public:
 	///< summary>
 	void Draw(ViewProjection& viewProjection);
 
+	
 
 private:
 	//ワールドデータ変換
@@ -59,5 +66,6 @@ private:
 	Input* input_ = nullptr;
 	//弾
 	PlayerBullet* bullet_ = nullptr;
-	
+	std::list<PlayerBullet*> bullets_;
+
 };
