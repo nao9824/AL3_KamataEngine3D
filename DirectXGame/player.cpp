@@ -219,6 +219,14 @@ void Player::Update() {
 	//座標移動
 	worldTranshorm_.translation_ = Add(worldTranshorm_.translation_, move);
 	
+	Rotate();
+	Attack();
+
+	//弾の更新処理
+	if (bullet_) {
+		bullet_->Update();
+	}
+
 	//移動限界座標
 	const float kMoveLimitX = 35;
 	const float kMoveLimitY = 20;
@@ -232,12 +240,47 @@ void Player::Update() {
 	
 	//行列更新
 	worldTranshorm_.matWorld_ = MakeAffineMatrix(worldTranshorm_.scale_, worldTranshorm_.rotation_, worldTranshorm_.translation_);
+	//WorldTransform::UpdateMatrix();
 
 	//キャラクターの座標を画面表示する処理
 	ImGui::Begin("Debug1");
 	ImGui::Text("Kamata Tarou %.02f,%.02f,%.02f", worldTranshorm_.translation_.x, worldTranshorm_.translation_.y, worldTranshorm_.translation_.z);
 	ImGui::End();
+
+	
 }
 
-void Player::Draw(ViewProjection& viewProjection) { model_->Draw(worldTranshorm_, viewProjection, textureHandle_); }
+void Player::Rotate() {
+	//回転速さ[ラジアン/frame]
+	const float kRotSpeed = 0.02f;
+
+	//押した方向で移動ベクトルを変更
+	if (input_->PushKey(DIK_A)) {
+		worldTranshorm_.rotation_.y -= kRotSpeed;
+	} else if (input_->PushKey(DIK_D)) {
+		worldTranshorm_.rotation_.y += kRotSpeed;
+	}
+}
+
+
+
+void Player::Attack() {
+	if (input_->PushKey(DIK_SPACE)) {
+		//弾を生成し、初期化
+		PlayerBullet* newBullet = new PlayerBullet();
+		newBullet->Initialize(model_, worldTranshorm_.translation_);
+
+		//弾を登録する
+		bullet_ = newBullet;
+	}
+}
+
+void Player::Draw(ViewProjection& viewProjection) { 
+	model_->Draw(worldTranshorm_, viewProjection, textureHandle_); 
+
+	//弾描画
+	if (bullet_) {
+		bullet_->Draw(viewProjection);
+	}
+}
 

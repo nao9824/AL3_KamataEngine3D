@@ -2,6 +2,7 @@
 #include "Model.h"
 #include "WorldTransform.h"
 #include "Input.h"
+#include "PlayerBullet.h"
 
 // ベクトルとベクトルの足し算
 Vector3 Add(Vector3 v1, Vector3 v2);
@@ -34,11 +35,18 @@ public:
 	/// 更新
 	///< summary>
 	void Update();
+	void Rotate();
+
+	///< summary>
+	/// 攻撃
+	///< summary>
+	void Attack();
 
 	///< summary>
 	/// 描画
 	///< summary>
 	void Draw(ViewProjection& viewProjection);
+
 
 private:
 	//ワールドデータ変換
@@ -49,6 +57,7 @@ private:
 	uint32_t textureHandle_ = 0u;
 	//キーボード入力
 	Input* input_ = nullptr;
-
+	//弾
+	PlayerBullet* bullet_ = nullptr;
 	
 };
