@@ -3,7 +3,8 @@
 #include "ImGuiManager.h"
 
 
-void Player::Initialize(Model* model, uint32_t textureHandle) {//NULLポインタチェック
+void Player::Initialize(Model* model, uint32_t textureHandle) {
+	//NULLポインタチェック
 	assert(model);
 
 	model_ = model;

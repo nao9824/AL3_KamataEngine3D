@@ -9,6 +9,7 @@
 #include "WorldTransform.h"
 #include "player.h"
 #include "DebugCamera.h"
+#include "Enemy.h"
 
 /// <summary>
 /// ゲームシーン
@@ -57,6 +58,10 @@ private: // メンバ変数
 	Model* model_ = nullptr;
 	//自キャラ
 	Player* player_ = nullptr;
+	//敵キャラ
+	Enemy* enemy_ = nullptr;
+	Vector3 position_ = {0, 0, 22.0f};
+	Vector3 velocity_ = {0, 0, -0.1f};
 
 	//デバッグカメラ有効
 	bool isDebugCameraActive_ = false;
