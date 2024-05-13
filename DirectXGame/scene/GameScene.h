@@ -61,7 +61,8 @@ private: // メンバ変数
 	//敵キャラ
 	Enemy* enemy_ = nullptr;
 	Vector3 position_ = {0, 0, 22.0f};
-	Vector3 velocity_ = {0, 0, -0.1f};
+	Vector3 ApproachVelocity_ = {0, 0, -0.1f};
+	Vector3 LeaveVelocity_ = {-0.2f, 0.3f, 0.1f};
 
 	//デバッグカメラ有効
 	bool isDebugCameraActive_ = false;

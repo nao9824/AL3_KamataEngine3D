@@ -3,7 +3,7 @@
 #include "TextureManager.h"
 #include "ImGuiManager.h"
 
-void Enemy::Initialize(Model* model, const Vector3& position, const Vector3& velocity) {
+void Enemy::Initialize(Model* model, const Vector3& position, const Vector3& ApproachVelocity, const Vector3& LeaveVelocity) {
 	// NULLポインタチェック
 	assert(model);
 
@@ -15,16 +15,35 @@ void Enemy::Initialize(Model* model, const Vector3& position, const Vector3& vel
 	// 引数で受け取った初期化座標をセット
 	worldTransform_.translation_ = position;
 	// 引数で受け取った速度をメンバ変数に代入
-	velocity_ = velocity;
+	ApproachVelocity_ = ApproachVelocity;
+	LeaveVelocity_ = LeaveVelocity;
 }
 
 Enemy::~Enemy() {}
 
 void Enemy::Update() { 
-	//座標を移動させる
-	worldTransform_.translation_.x += velocity_.x;
-	worldTransform_.translation_.y += velocity_.y;
-	worldTransform_.translation_.z += velocity_.z;
+
+	switch (phase_) { 
+	case Phase::Approach:
+	default:
+		// 座標を移動させる
+		worldTransform_.translation_.x += ApproachVelocity_.x;
+		worldTransform_.translation_.y += ApproachVelocity_.y;
+		worldTransform_.translation_.z += ApproachVelocity_.z;
+		//既定の位置に到達したら離脱
+		if (worldTransform_.translation_.z < 0.0f) {
+			phase_ = Phase::Leave;
+		}
+		break;
+	case Phase::Leave:
+		// 座標を移動させる
+		worldTransform_.translation_.x += LeaveVelocity_.x;
+		worldTransform_.translation_.y += LeaveVelocity_.y;
+		worldTransform_.translation_.z += LeaveVelocity_.z;
+		break;
+	}
+
+	
 	// ワールドトランスフォームの更新
 	worldTransform_.UpdateMatrix();
 
