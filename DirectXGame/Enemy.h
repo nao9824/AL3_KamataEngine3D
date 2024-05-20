@@ -1,6 +1,10 @@
 #pragma once
 #include "Model.h"
 #include "WorldTransform.h"
+#include "Input.h"
+#include "EnemyBullet.h"
+#include <list>
+#include "mathFunction.h"
 
 class Enemy {
 public:
@@ -30,6 +34,17 @@ public:
 		Leave,//離脱する
 	};
 
+	//接近フェーズ初期化
+	void approachInitialize();
+
+/// <summary>
+/// 弾発射
+/// </summary>
+	void Fire();
+
+	//発射間隔
+	static const int kFireIntervel = 60;
+
 private:
 	// ワールドデータ変換
 	WorldTransform worldTransform_;
@@ -42,4 +57,9 @@ private:
 	Vector3 LeaveVelocity_;
 	//フェーズ
 	Phase phase_ = Phase::Approach;
+	// 弾
+	EnemyBullet* bullet_ = nullptr;
+	std::list<EnemyBullet*> bullets_;
+	//発射タイマー
+	int32_t bulletTimer_ = 0;
 };
