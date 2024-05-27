@@ -38,11 +38,19 @@ public:
 
 	//接近フェーズ初期化
 	void approachInitialize();
+	// 接近フェーズ更新
+	void approachUpdate();
+
+	// 弾リストを取得
+	const std::list<EnemyBullet*>& GetBullets() const { return bullets_; }
 
 /// <summary>
 /// 弾発射
 /// </summary>
 	void Fire();
+
+	// 衝突を検出したら呼び出されるコールバック関数
+	void OnCollision();
 
 	//発射間隔
 	static const int kFireIntervel = 60;

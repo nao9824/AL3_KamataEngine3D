@@ -42,6 +42,12 @@ public: // メンバ関数
 	/// </summary>
 	void Draw();
 
+/// <summary>
+/// 衝突判定と応答
+/// </summary>
+	void CheckAllCollisions();
+
+
 private: // メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;
 	Input* input_ = nullptr;
@@ -58,11 +64,13 @@ private: // メンバ変数
 	Model* model_ = nullptr;
 	//自キャラ
 	Player* player_ = nullptr;
+	float playerRadius_ = 1.0f;
 	//敵キャラ
 	Enemy* enemy_ = nullptr;
 	Vector3 position_ = {20.0f, 0, 22.0f};
 	Vector3 ApproachVelocity_ = {0, 0, 0.0f};
 	Vector3 LeaveVelocity_ = {0.0f, 0.0f, 0.0f};
+	float enemyRadius_ = 1.0f;
 
 	//デバッグカメラ有効
 	bool isDebugCameraActive_ = false;

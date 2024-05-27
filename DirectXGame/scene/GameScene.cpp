@@ -49,7 +49,8 @@ void GameScene::Initialize() {
 }
 
 void GameScene::Update() {
-//自キャラの更新
+	CheckAllCollisions();
+	//自キャラの更新
 	player_->Update();
 
 	#ifdef _DEBUG
@@ -74,6 +75,7 @@ void GameScene::Update() {
 	if (enemy_ != nullptr) {
 		enemy_->Update();
 	}
+	
 }
 
 void GameScene::Draw() {
@@ -127,4 +129,77 @@ void GameScene::Draw() {
 	Sprite::PostDraw();
 
 #pragma endregion
+}
+
+void GameScene::CheckAllCollisions() {
+//判定対象AとBの座標
+	Vector3 posA, posB;
+
+	//自弾リストの取得
+	const std::list<PlayerBullet*>& playerBullets = player_->GetBullets();
+	//敵弾リストの取得
+	const std::list<EnemyBullet*>& enemyBullets = enemy_->GetBullets();
+
+	#pragma region //自キャラと敵弾の当たり判定
+	#pragma endregion
+	
+	//自キャラと敵弾全ての当たり判定
+	for (EnemyBullet* bullet : enemyBullets) {
+		// 自キャラの座標
+		posA = player_->GetWorldPosition();
+		// 敵弾の座標
+		posB = bullet->GetWorldPosition();
+
+		if ((posB.x - posA.x) * (posB.x - posA.x) + 
+			(posB.y - posA.y) * (posB.y - posA.y) + 
+			(posB.z - posA.z) * (posB.z - posA.z) <= (playerRadius_ + enemyRadius_) * (playerRadius_ + enemyRadius_)) {
+
+			// 自キャラの衝突時コールバックを呼び出す
+			player_->OnCollision();
+			// 敵弾の衝突時コールバックを呼び出す
+			bullet->OnCollision();
+		}
+	}
+
+	#pragma region // 自弾と敵キャラの当たり判定
+    #pragma endregion
+	
+	// 自弾と敵キャラ全ての当たり判定
+	for (PlayerBullet* bullet : playerBullets) {
+		// 自弾の座標
+		posA = bullet->GetWorldPosition();
+		// 敵キャラの座標
+		posB = enemy_->GetWorldPosition();
+
+		if ((posB.x - posA.x) * (posB.x - posA.x) + 
+			(posB.y - posA.y) * (posB.y - posA.y) + 
+			(posB.z - posA.z) * (posB.z - posA.z) <= (playerRadius_ + enemyRadius_) * (playerRadius_ + enemyRadius_)) {
+
+			// 自弾の衝突時コールバックを呼び出す
+			bullet->OnCollision();
+			// 敵キャラの衝突時コールバックを呼び出す
+			enemy_->OnCollision();
+		}
+	}
+	#pragma region // 自弾と敵弾の当たり判定
+    #pragma endregion
+	// 自弾と敵弾全ての当たり判定
+	for (PlayerBullet* Pbullet : playerBullets) {
+		for (EnemyBullet* Ebullet : enemyBullets) {
+
+			// 自弾の座標
+			posA = Pbullet->GetWorldPosition();
+			// 敵弾の座標
+			posB = Ebullet->GetWorldPosition();
+
+			if ((posB.x - posA.x) * (posB.x - posA.x) + (posB.y - posA.y) * (posB.y - posA.y) + (posB.z - posA.z) * (posB.z - posA.z) <=
+			    (playerRadius_ + enemyRadius_) * (playerRadius_ + enemyRadius_)) {
+
+				// 自弾の衝突時コールバックを呼び出す
+				Pbullet->OnCollision();
+				// 敵弾の衝突時コールバックを呼び出す
+				Ebullet->OnCollision();
+			}
+		}
+	}
 }

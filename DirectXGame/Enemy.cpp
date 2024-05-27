@@ -20,12 +20,11 @@ void Enemy::Initialize(Model* model, const Vector3& position, const Vector3& App
 	ApproachVelocity_ = ApproachVelocity;
 	LeaveVelocity_ = LeaveVelocity;
 
+	approachInitialize();
 	// 弾の更新処理
 	for (EnemyBullet* bullet : bullets_) {
 		bullet->Update();
 	}
-	approachInitialize();
-
 	
 }
 
@@ -36,7 +35,16 @@ Enemy::~Enemy() {
 }
 
 void Enemy::Update() { 
-	approachInitialize();
+	approachUpdate();
+
+	// デスフラグの立った球を削除
+	bullets_.remove_if([](EnemyBullet* bullet) {
+		if (bullet->IsDead()) {
+			delete bullet;
+			return true;
+		}
+		return false;
+	});
 
 	switch (phase_) { 
 	case Phase::Approach:
@@ -80,6 +88,11 @@ void Enemy::Draw(const ViewProjection& viewProjection) {
 }
 
 void Enemy::approachInitialize() {
+	// 発射タイマーを初期化
+	bulletTimer_ = kFireIntervel;
+}
+
+void Enemy::approachUpdate() {
 	//発射タイマーカウントダウン
 	bulletTimer_--;
 	//指定時間に達した
@@ -90,7 +103,6 @@ void Enemy::approachInitialize() {
 	bulletTimer_ = kFireIntervel;
 	}
 
-
 }
 
 void Enemy::Fire() {
@@ -98,6 +110,9 @@ void Enemy::Fire() {
 	// 弾の速度
 	const float kBulletSpeed = 0.1f;
 	Vector3 velocity(0, 0, kBulletSpeed);
+
+	Vector3 p = player_->GetWorldPosition();
+	Vector3 e = GetWorldPosition();
 
 	subtractVector_ = Subtract(player_->GetWorldPosition(), GetWorldPosition());
 	
@@ -114,6 +129,8 @@ void Enemy::Fire() {
 	// 弾を登録する
 	bullets_.push_back(newBullet);
 }
+
+void Enemy::OnCollision() {}
 
 Vector3 Enemy::GetWorldPosition() {
 	// ワールド座標を入れる変数

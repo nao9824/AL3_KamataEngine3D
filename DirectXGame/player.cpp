@@ -104,7 +104,7 @@ void Player::Rotate() {
 
 
 void Player::Attack() {
-	if (input_->PushKey(DIK_SPACE)) {
+	if (input_->TriggerKey(DIK_SPACE)) {
 		
 		//弾の速度
 		const float kBulletSpeed = 1.0f;
@@ -130,6 +130,8 @@ void Player::Draw(ViewProjection& viewProjection) {
 		bullet->Draw(viewProjection);
 	}
 }
+
+void Player::OnCollision() {}
 
 Vector3 Player::GetWorldPosition() { 
 	//ワールド座標を入れる変数
