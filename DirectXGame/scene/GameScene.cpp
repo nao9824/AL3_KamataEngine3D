@@ -31,10 +31,14 @@ void GameScene::Initialize() {
 	player_->Initialize(model_, textureHandle_);
 	//敵キャラの発生
 	enemy_ = new Enemy();
+	// 敵キャラに自キャラのアドレスを渡す
+	enemy_->SetPlayer(player_);
 	if (enemy_ != nullptr) {
 		// 敵キャラの初期化
 		enemy_->Initialize(model_, position_, ApproachVelocity_,LeaveVelocity_);
 	}
+	
+
 	//デバッグカメラの生成
 	debugCamera_ = new DebugCamera(1280, 720);
 

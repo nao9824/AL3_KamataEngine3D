@@ -6,6 +6,8 @@
 #include <list>
 #include "mathFunction.h"
 
+class Player; 
+
 class Enemy {
 public:
 	///< summary>
@@ -45,6 +47,11 @@ public:
 	//発射間隔
 	static const int kFireIntervel = 60;
 
+	void SetPlayer(Player* player) { player_ = player; }
+
+	// ワールド座標を取得
+	Vector3 GetWorldPosition();
+
 private:
 	// ワールドデータ変換
 	WorldTransform worldTransform_;
@@ -62,4 +69,13 @@ private:
 	std::list<EnemyBullet*> bullets_;
 	//発射タイマー
 	int32_t bulletTimer_ = 0;
+
+	// 自キャラ
+	Player* player_ = nullptr;
+	//差分ベクトル
+	Vector3 subtractVector_;
+	//正規化したベクトル
+	Vector3 normalVector_;
+	//長さと速さ合わせたやつ
+	Vector3 nsVector_;
 };

@@ -10,6 +10,30 @@ Vector3 Add(Vector3 v1, Vector3 v2) {
 	return result;
 }
 
+// 減算
+Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
+	Vector3 result;
+
+	result.x = v1.x - v2.x;
+	result.y = v1.y - v2.y;
+	result.z = v1.z - v2.z;
+
+	return result;
+}
+
+// 正規化
+Vector3 Normalize(const Vector3& v) {
+	float length;
+	Vector3 result;
+
+	length = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+	result.x = v.x / length;
+	result.y = v.y / length;
+	result.z = v.z / length;
+
+	return result;
+}
+
 // 拡大縮小行列
 Matrix4x4 MakeScaleMatrix(const Vector3& scale) {
 	Matrix4x4 result{};
@@ -107,7 +131,7 @@ Matrix4x4 MakeRotateZMatrix(float radian) {
 }
 
 // 積
-Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
+Matrix4x4 matrixMultiply(const Matrix4x4& m1, const Matrix4x4& m2) {
 	Matrix4x4 result;
 
 	result.m[0][0] = m1.m[0][0] * m2.m[0][0] + m1.m[0][1] * m2.m[1][0] + m1.m[0][2] * m2.m[2][0] + m1.m[0][3] * m2.m[3][0];
@@ -130,6 +154,16 @@ Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
 	return result;
 }
 
+// スカラー倍
+Vector3 vectorMultiply(float scalar, const Vector3 v) {
+	Vector3 result;
+
+	result.x = v.x * scalar;
+	result.y = v.y * scalar;
+	result.z = v.z * scalar;
+
+	return result;
+}
 // 平行移動行列
 Matrix4x4 MakeTranslateMatrix(const Vector3& translate) {
 	Matrix4x4 result;
@@ -160,7 +194,7 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 	Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
 	Matrix4x4 rotateYMatrix = MakeRotateYMatrix(rotate.y);
 	Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
-	Matrix4x4 rotateXYZMatrix = Multiply(rotateXMatrix, Multiply(rotateYMatrix, rotateZMatrix));
+	Matrix4x4 rotateXYZMatrix = matrixMultiply(rotateXMatrix, matrixMultiply(rotateYMatrix, rotateZMatrix));
 
 	result.m[0][0] = scale.x * rotateXYZMatrix.m[0][0];
 	result.m[0][1] = scale.x * rotateXYZMatrix.m[0][1];

@@ -3,6 +3,7 @@
 #include "TextureManager.h"
 #include "ImGuiManager.h"
 #include "EnemyBullet.h"
+#include "Player.h"
 
 void Enemy::Initialize(Model* model, const Vector3& position, const Vector3& ApproachVelocity, const Vector3& LeaveVelocity) {
 	// NULLポインタチェック
@@ -23,9 +24,9 @@ void Enemy::Initialize(Model* model, const Vector3& position, const Vector3& App
 	for (EnemyBullet* bullet : bullets_) {
 		bullet->Update();
 	}
-	
-
 	approachInitialize();
+
+	
 }
 
 Enemy::~Enemy() {
@@ -35,6 +36,7 @@ Enemy::~Enemy() {
 }
 
 void Enemy::Update() { 
+	approachInitialize();
 
 	switch (phase_) { 
 	case Phase::Approach:
@@ -65,7 +67,7 @@ void Enemy::Update() {
 		bullet->Update();
 	}
 
-	approachInitialize();
+	
 }
 
 void Enemy::Draw(const ViewProjection& viewProjection) {
@@ -92,9 +94,15 @@ void Enemy::approachInitialize() {
 }
 
 void Enemy::Fire() {
+	assert(player_);
 	// 弾の速度
-	const float kBulletSpeed = 1.0f;
-	Vector3 velocity(0, 0, -kBulletSpeed);
+	const float kBulletSpeed = 0.1f;
+	Vector3 velocity(0, 0, kBulletSpeed);
+
+	subtractVector_ = Subtract(player_->GetWorldPosition(), GetWorldPosition());
+	
+	normalVector_ = Normalize(subtractVector_);
+	velocity = vectorMultiply(kBulletSpeed, normalVector_);
 
 	// 速度ベクトルを自機の向きに合わせて回転させる
 	velocity = TransformNormal(velocity, worldTransform_.matWorld_);
@@ -105,4 +113,15 @@ void Enemy::Fire() {
 
 	// 弾を登録する
 	bullets_.push_back(newBullet);
+}
+
+Vector3 Enemy::GetWorldPosition() {
+	// ワールド座標を入れる変数
+	Vector3 worldPos;
+	// ワールド行列の平行移動成分を取得(ワールド座標)
+	worldPos.x = worldTransform_.matWorld_.m[3][0];
+	worldPos.y = worldTransform_.matWorld_.m[3][1];
+	worldPos.z = worldTransform_.matWorld_.m[3][2];
+
+	return worldPos;
 }

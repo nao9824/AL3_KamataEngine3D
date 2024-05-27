@@ -37,7 +37,8 @@ public:
 	///< summary>
 	void Draw(ViewProjection& viewProjection);
 
-	
+	// ワールド座標を取得
+	Vector3 GetWorldPosition();
 
 private:
 	//ワールドデータ変換
@@ -51,5 +52,5 @@ private:
 	//弾
 	PlayerBullet* bullet_ = nullptr;
 	std::list<PlayerBullet*> bullets_;
-
+	
 };
