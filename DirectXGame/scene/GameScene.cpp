@@ -11,6 +11,8 @@ GameScene::~GameScene() {
 	delete model_;
 	delete debugCamera_;
 	delete enemy_;
+	delete skydome_;
+	delete modelSkydome_;
 }
 
 void GameScene::Initialize() {
@@ -37,8 +39,12 @@ void GameScene::Initialize() {
 		// 敵キャラの初期化
 		enemy_->Initialize(model_, position_, ApproachVelocity_,LeaveVelocity_);
 	}
-	
-
+	//スカイドーム
+	skydome_ = new Skydome();
+	//3Dモデルの生成
+	modelSkydome_ = Model::CreateFromOBJ("uvCheck", true);
+	// スカイドームの初期化 
+	skydome_->Initialize(modelSkydome_, textureHandle_, &viewProjection_);
 	//デバッグカメラの生成
 	debugCamera_ = new DebugCamera(1280, 720);
 
@@ -52,6 +58,8 @@ void GameScene::Update() {
 	CheckAllCollisions();
 	//自キャラの更新
 	player_->Update();
+	//スカイドームの更新
+	skydome_->Update();
 
 	#ifdef _DEBUG
 	if (input_->TriggerKey(DIK_E)) {
@@ -111,7 +119,8 @@ void GameScene::Draw() {
 	if (enemy_ != nullptr) {
 		enemy_->Draw(viewProjection_);
 	}
-
+	//スカイドームの描画
+	skydome_->Draw(viewProjection_);
 
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();

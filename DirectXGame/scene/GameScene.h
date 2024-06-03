@@ -10,6 +10,7 @@
 #include "player.h"
 #include "DebugCamera.h"
 #include "Enemy.h"
+#include "skydome.h"
 
 /// <summary>
 /// ゲームシーン
@@ -71,6 +72,10 @@ private: // メンバ変数
 	Vector3 ApproachVelocity_ = {0, 0, 0.0f};
 	Vector3 LeaveVelocity_ = {0.0f, 0.0f, 0.0f};
 	float enemyRadius_ = 1.0f;
+	//スカイドーム
+	Skydome* skydome_ = nullptr;
+	//3Dモデル
+	Model* modelSkydome_ = nullptr;
 
 	//デバッグカメラ有効
 	bool isDebugCameraActive_ = false;
