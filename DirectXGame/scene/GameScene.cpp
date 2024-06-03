@@ -23,6 +23,7 @@ void GameScene::Initialize() {
 
 	//ファイル名を指定してテクスチャを読み込む
 	textureHandle_ = TextureManager::Load("player.png");
+	viewProjection_.farZ = 2000.0f;
 	// ビュープロジェクションの初期化
 	viewProjection_.Initialize();
 	//3Dモデルの生成
