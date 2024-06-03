@@ -114,14 +114,15 @@ void GameScene::Draw() {
 	/// ここに3Dオブジェクトの描画処理を追加できる
 	/// </summary>
 
+	// スカイドームの描画
+	skydome_->Draw(viewProjection_);
 	//自キャラの描画
 	player_->Draw(viewProjection_);
 	//敵キャラの描画
 	if (enemy_ != nullptr) {
 		enemy_->Draw(viewProjection_);
 	}
-	//スカイドームの描画
-	skydome_->Draw(viewProjection_);
+	
 
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
