@@ -61,5 +61,5 @@ private:
 	//弾
 	PlayerBullet* bullet_ = nullptr;
 	std::list<PlayerBullet*> bullets_;
-	Vector3 playerPosition_ = {0.0f, 0.0f, 50.0f};
+	//Vector3 playerPosition_ = {0.0f, 0.0f, 50.0f};
 };
