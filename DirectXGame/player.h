@@ -14,7 +14,7 @@ public:
 	///< summary>
 	/// 初期化
 	///< summary>
-	void Initialize(Model* model,uint32_t textureHandle);
+	void Initialize(Model* model, uint32_t textureHandle, Vector3 playerPosition);
 
 	///< summary>
 	/// デストラクタ
@@ -46,9 +46,12 @@ public:
 	// ワールド座標を取得
 	Vector3 GetWorldPosition();
 
+	//親となるワールドトランスフォームをセット
+	void SetParent(const WorldTransform* parent);
+
 private:
 	//ワールドデータ変換
-	WorldTransform worldTranshorm_;
+	WorldTransform worldTransform_;
 	//モデル
 	Model* model_ = nullptr;
 	//テクスチャハンドル
@@ -58,5 +61,5 @@ private:
 	//弾
 	PlayerBullet* bullet_ = nullptr;
 	std::list<PlayerBullet*> bullets_;
-	
+	Vector3 playerPosition_ = {0.0f, 0.0f, 50.0f};
 };

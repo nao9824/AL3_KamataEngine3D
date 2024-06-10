@@ -116,6 +116,7 @@
     <ClCompile Include="mathFunction.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="PlayerBullet.cpp" />
+    <ClCompile Include="RailCamera.cpp" />
     <ClCompile Include="scene\GameScene.cpp" />
     <ClCompile Include="skydome.cpp" />
   </ItemGroup>

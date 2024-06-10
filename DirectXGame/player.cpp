@@ -3,14 +3,15 @@
 #include "ImGuiManager.h"
 
 
-void Player::Initialize(Model* model, uint32_t textureHandle) {
+void Player::Initialize(Model* model, uint32_t textureHandle, Vector3 playerPosition) {
 	//NULLポインタチェック
 	assert(model);
 
 	model_ = model;
 	textureHandle_ = textureHandle;
 
-	worldTranshorm_.Initialize();
+	worldTransform_.Initialize();
+	worldTransform_.translation_ = playerPosition;
 
 	//シングルトンインスタンスを取得する
 	input_ = Input::GetInstance();
@@ -27,7 +28,7 @@ Player::~Player() {
 
 
 void Player::Update() {
-	worldTranshorm_.TransferMatrix(); 
+	worldTransform_.TransferMatrix(); 
 
 	//デスフラグの立った球を削除
 	bullets_.remove_if([](PlayerBullet* bullet) {
@@ -56,7 +57,7 @@ void Player::Update() {
 	}
 
 	//座標移動
-	worldTranshorm_.translation_ = Add(worldTranshorm_.translation_, move);
+	worldTransform_.translation_ = Add(worldTransform_.translation_, move);
 	
 	Rotate();
 	Attack();
@@ -71,19 +72,20 @@ void Player::Update() {
 	const float kMoveLimitY = 20;
 
 	//範囲を超えない処理
-	worldTranshorm_.translation_.x = max(worldTranshorm_.translation_.x, -kMoveLimitX);
-	worldTranshorm_.translation_.x = min(worldTranshorm_.translation_.x, +kMoveLimitX);
-	worldTranshorm_.translation_.y = max(worldTranshorm_.translation_.y, -kMoveLimitY);
-	worldTranshorm_.translation_.y = min(worldTranshorm_.translation_.y, +kMoveLimitY);
+	worldTransform_.translation_.x = max(worldTransform_.translation_.x, -kMoveLimitX);
+	worldTransform_.translation_.x = min(worldTransform_.translation_.x, +kMoveLimitX);
+	worldTransform_.translation_.y = max(worldTransform_.translation_.y, -kMoveLimitY);
+	worldTransform_.translation_.y = min(worldTransform_.translation_.y, +kMoveLimitY);
 
 	
 	//行列更新
-	worldTranshorm_.matWorld_ = MakeAffineMatrix(worldTranshorm_.scale_, worldTranshorm_.rotation_, worldTranshorm_.translation_);
-	//WorldTransform::UpdateMatrix();
+	//worldTransform_.matWorld_ = MakeAffineMatrix(worldTransform_.scale_, worldTransform_.rotation_, worldTransform_.translation_);
+	
+	worldTransform_.UpdateMatrix();
 
 	//キャラクターの座標を画面表示する処理
 	ImGui::Begin("Debug1");
-	ImGui::Text("Kamata Tarou %.02f,%.02f,%.02f", worldTranshorm_.translation_.x, worldTranshorm_.translation_.y, worldTranshorm_.translation_.z);
+	ImGui::Text("Kamata Tarou %.02f,%.02f,%.02f", worldTransform_.translation_.x, worldTransform_.translation_.y, worldTransform_.translation_.z);
 	ImGui::End();
 
 	
@@ -95,9 +97,9 @@ void Player::Rotate() {
 
 	//押した方向で移動ベクトルを変更
 	if (input_->PushKey(DIK_A)) {
-		worldTranshorm_.rotation_.y -= kRotSpeed;
+		worldTransform_.rotation_.y -= kRotSpeed;
 	} else if (input_->PushKey(DIK_D)) {
-		worldTranshorm_.rotation_.y += kRotSpeed;
+		worldTransform_.rotation_.y += kRotSpeed;
 	}
 }
 
@@ -111,11 +113,11 @@ void Player::Attack() {
 		Vector3 velocity(0, 0, kBulletSpeed);
 
 		//速度ベクトルを自機の向きに合わせて回転させる
-		velocity = TransformNormal(velocity, worldTranshorm_.matWorld_);
+		velocity = TransformNormal(velocity, worldTransform_.matWorld_);
 
 		//弾を生成し、初期化
 		PlayerBullet* newBullet = new PlayerBullet();
-		newBullet->Initialize(model_, worldTranshorm_.translation_,velocity);
+		newBullet->Initialize(model_, worldTransform_.translation_,velocity);
 
 		//弾を登録する
 		bullets_.push_back(newBullet);
@@ -123,7 +125,7 @@ void Player::Attack() {
 }
 
 void Player::Draw(ViewProjection& viewProjection) { 
-	model_->Draw(worldTranshorm_, viewProjection, textureHandle_); 
+	model_->Draw(worldTransform_, viewProjection, textureHandle_); 
 
 	//弾描画
 	for (PlayerBullet* bullet : bullets_) {
@@ -137,9 +139,15 @@ Vector3 Player::GetWorldPosition() {
 	//ワールド座標を入れる変数
 	Vector3 worldPos;
 	//ワールド行列の平行移動成分を取得(ワールド座標)
-	worldPos.x = worldTranshorm_.matWorld_.m[3][0];
-	worldPos.y = worldTranshorm_.matWorld_.m[3][1];
-	worldPos.z = worldTranshorm_.matWorld_.m[3][2];
+	worldPos.x = worldTransform_.matWorld_.m[3][0];
+	worldPos.y = worldTransform_.matWorld_.m[3][1];
+	worldPos.z = worldTransform_.matWorld_.m[3][2];
 
-	return worldPos; }
+	return worldPos;
+}
+
+void Player::SetParent(const WorldTransform* parent) {
+//親子関係を結ぶ
+	worldTransform_.parent_ = parent;
+}
 

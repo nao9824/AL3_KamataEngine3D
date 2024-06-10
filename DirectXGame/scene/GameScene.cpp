@@ -31,7 +31,8 @@ void GameScene::Initialize() {
 	//自キャラの生成
 	player_ = new Player();
 	//自キャラの初期化
-	player_->Initialize(model_, textureHandle_);
+	Vector3 playerPosition(0, 0, 50);
+	player_->Initialize(model_, textureHandle_,playerPosition);
 	//敵キャラの発生
 	enemy_ = new Enemy();
 	// 敵キャラに自キャラのアドレスを渡す
@@ -48,11 +49,17 @@ void GameScene::Initialize() {
 	skydome_->Initialize(modelSkydome_, textureHandle_, &viewProjection_);
 	//デバッグカメラの生成
 	debugCamera_ = new DebugCamera(1280, 720);
-
+	//レールカメラの生成
+	railcamera_ = new RaillCamera();
+	railcamera_->Initialize(railPosition_,railRotate_);
 	//軸方向表示の意思を有効にする
 	AxisIndicator::GetInstance()->SetVisible(true);
 	//軸方向表示が参照するビュープロジェクションを指定する(アドレス渡し)
 	AxisIndicator::GetInstance()->SetTargetViewProjection(&viewProjection_);
+
+	//自キャラとレールカメラの親子関係を結ぶ
+	player_->SetParent(&railcamera_->GetWorldTransform());
+
 }
 
 void GameScene::Update() {
@@ -67,14 +74,16 @@ void GameScene::Update() {
 		isDebugCameraActive_ = true;
 	}
 	#endif
-
+	//レールカメラの処理
+	railcamera_->Update();
 	//カメラの処理
 	if (isDebugCameraActive_) {
 		// デバッグカメラの更新
 		debugCamera_->Update();
 		
-		viewProjection_.matView = debugCamera_->GetViewProjection().matView;
-		viewProjection_.matProjection = debugCamera_->GetViewProjection().matProjection;
+		viewProjection_.matView = railcamera_->GetViewProjection().matView;
+		viewProjection_.matProjection = railcamera_->GetViewProjection().matProjection;
+		
 		//ビュープロジェクション行列の転送
 		viewProjection_.TransferMatrix();
 	} else {
