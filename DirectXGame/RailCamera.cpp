@@ -8,6 +8,7 @@ void RaillCamera::Initialize(const Vector3& position, const Vector3& rotate) {
 	worldTransform_.rotation_ = rotate;
 	velocity_ = {0.0f, 0.0f, 0.05f};
 	viewProjection_.Initialize();
+
 }
 
 void RaillCamera::Update() {
