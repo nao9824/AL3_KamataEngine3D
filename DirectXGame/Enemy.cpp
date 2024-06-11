@@ -4,6 +4,7 @@
 #include "ImGuiManager.h"
 #include "EnemyBullet.h"
 #include "Player.h"
+#include "GameScene.h"
 
 void Enemy::Initialize(Model* model, const Vector3& position, const Vector3& ApproachVelocity, const Vector3& LeaveVelocity) {
 	// NULLポインタチェック
@@ -21,30 +22,18 @@ void Enemy::Initialize(Model* model, const Vector3& position, const Vector3& App
 	LeaveVelocity_ = LeaveVelocity;
 
 	approachInitialize();
-	// 弾の更新処理
-	for (EnemyBullet* bullet : bullets_) {
-		bullet->Update();
-	}
+	
 	
 }
 
 Enemy::~Enemy() {
-	for (EnemyBullet* bullet : bullets_) {
-		delete bullet;
-	}
+	
 }
 
 void Enemy::Update() { 
 	approachUpdate();
 
-	// デスフラグの立った球を削除
-	bullets_.remove_if([](EnemyBullet* bullet) {
-		if (bullet->IsDead()) {
-			delete bullet;
-			return true;
-		}
-		return false;
-	});
+	
 
 	switch (phase_) { 
 	case Phase::Approach:
@@ -70,10 +59,7 @@ void Enemy::Update() {
 	// ワールドトランスフォームの更新
 	worldTransform_.UpdateMatrix();
 
-	// 弾の更新処理
-	for (EnemyBullet* bullet : bullets_) {
-		bullet->Update();
-	}
+	
 
 	
 }
@@ -81,10 +67,8 @@ void Enemy::Update() {
 void Enemy::Draw(const ViewProjection& viewProjection) {
 	// モデルの描画
 	model_->Draw(worldTransform_, viewProjection, textureHandle_);
-	// 弾描画
-	for (EnemyBullet* bullet : bullets_) {
-		bullet->Draw(viewProjection);
-	}
+
+	
 }
 
 void Enemy::approachInitialize() {
@@ -127,10 +111,11 @@ void Enemy::Fire() {
 	newBullet->Initialize(model_, worldTransform_.translation_, velocity);
 
 	// 弾を登録する
-	bullets_.push_back(newBullet);
+	//enemyBullets_.push_back(newBullet);
+	gameScene_->AddEnemyBullet(newBullet);
 }
 
-void Enemy::OnCollision() {}
+void Enemy::OnCollision() { isDead_ = true; }
 
 Vector3 Enemy::GetWorldPosition() {
 	// ワールド座標を入れる変数

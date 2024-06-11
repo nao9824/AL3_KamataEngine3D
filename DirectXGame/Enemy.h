@@ -7,6 +7,7 @@
 #include "mathFunction.h"
 
 class Player; 
+class GameScene;
 
 class Enemy {
 public:
@@ -41,9 +42,11 @@ public:
 	// 接近フェーズ更新
 	void approachUpdate();
 
-	// 弾リストを取得
-	const std::list<EnemyBullet*>& GetBullets() const { return bullets_; }
-
+	/// <summary>
+	/// getter
+	/// </summary>
+	bool IsDead() const { return isDead_; }
+	
 /// <summary>
 /// 弾発射
 /// </summary>
@@ -56,6 +59,7 @@ public:
 	static const int kFireIntervel = 60;
 
 	void SetPlayer(Player* player) { player_ = player; }
+	void SetGameScene(GameScene* gameScene) { gameScene_ = gameScene; }
 
 	// ワールド座標を取得
 	Vector3 GetWorldPosition();
@@ -72,18 +76,20 @@ private:
 	Vector3 LeaveVelocity_;
 	//フェーズ
 	Phase phase_ = Phase::Approach;
-	// 弾
-	EnemyBullet* bullet_ = nullptr;
-	std::list<EnemyBullet*> bullets_;
-	//発射タイマー
+	// 発射タイマー
 	int32_t bulletTimer_ = 0;
 
 	// 自キャラ
 	Player* player_ = nullptr;
+	//ゲームシーン
+	GameScene* gameScene_ = nullptr;
+
 	//差分ベクトル
 	Vector3 subtractVector_;
 	//正規化したベクトル
 	Vector3 normalVector_;
 	//長さと速さ合わせたやつ
 	Vector3 nsVector_;
+	// デスフラグ
+	bool isDead_ = false;
 };
