@@ -73,5 +73,5 @@ private:
 	PlayerBullet* bullet_ = nullptr;
 	std::list<PlayerBullet*> bullets_;
 	//Vector3 playerPosition_ = {0.0f, 0.0f, 50.0f};
-
+	
 };

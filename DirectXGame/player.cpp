@@ -42,6 +42,7 @@ Player::~Player() {
 
 void Player::Update(const ViewProjection& viewProjection) {
 	
+	
 
 	//デスフラグの立った球を削除
 	bullets_.remove_if([](PlayerBullet* bullet) {
@@ -54,6 +55,28 @@ void Player::Update(const ViewProjection& viewProjection) {
 
 	Vector3 move = {0, 0, 0};
 	const float kCharacterSpeed = 0.2f;
+
+	// ゲームパッドの状態を得る変数(XINPUT)
+	XINPUT_STATE joyState;
+
+	// ゲームパッド状態取得
+	if (Input::GetInstance()->GetJoystickState(0, joyState)) {
+		move.x += (float)joyState.Gamepad.sThumbLX / SHRT_MAX * kCharacterSpeed;
+		move.y += (float)joyState.Gamepad.sThumbLY / SHRT_MAX * kCharacterSpeed;
+	}
+
+	//スプライトの現在座標を取得
+	Vector2 spritePosition = sprite2DReticle_->GetPosition();
+
+	//XINPUT_STATE joyState;
+
+	//ジョイスティック状態取得
+	if (Input::GetInstance()->GetJoystickState(0, joyState)) {
+		spritePosition.x += (float)joyState.Gamepad.sThumbRX / SHRT_MAX * 5.0f;
+		spritePosition.y -= (float)joyState.Gamepad.sThumbRY / SHRT_MAX * 5.0f;
+		//スプライトの座標変更を反映
+		sprite2DReticle_->SetPosition(spritePosition);
+	}
 
 	//左右
 	if (input_->PushKey(DIK_LEFT)) {
@@ -112,6 +135,32 @@ void Player::Update(const ViewProjection& viewProjection) {
 	//スプライトのレティクルに座標設定
 	sprite2DReticle_->SetPosition(Vector2(positionReticle.x, positionReticle.y));
 
+	//マウスカーソルのスクリーン座標からワールド座標を取得して3Dレティクル配置
+	POINT mousePosition;
+	//マウス座標を取得
+	GetCursorPos(&mousePosition);
+	//クライアントエリア座標に変換する
+	HWND hwnd = WinApp::GetInstance()->GetHwnd();
+	ScreenToClient(hwnd, &mousePosition);//ここでマウスポジをクライアントエリアに変換してる
+	sprite2DReticle_->SetPosition(Vector2((float)mousePosition.x,(float)mousePosition.y));
+	//ビュープロジェクションビューポート行列
+	Matrix4x4 matVPV = matrixMultiply(matrixMultiply(viewProjection.matView, viewProjection.matProjection), matViewport);
+	//合成行列の逆行列を計算する
+	Matrix4x4 matInverseVPV = Inverse(matVPV);
+	//スクリーン座標
+	Vector3 posNear = Vector3((float)mousePosition.x, (float)mousePosition.y, 0);
+	Vector3 posFar = Vector3((float)mousePosition.x, (float)mousePosition.y, 1);
+	//スクリーン座標系からワールド座標系へ
+	posNear = Transform(posNear, matInverseVPV);
+	posFar = Transform(posFar, matInverseVPV);
+	//マウスレイの方向
+	Vector3 mouseDirection = Subtract(posFar, posNear);
+	mouseDirection = Normalize(mouseDirection);
+	//カメラから標準オブジェクトの距離
+	const float kDistanceTestObject = 70;
+	worldTransform3DReticle_.translation_ = Add(posNear, vectorMultiply(kDistanceTestObject, mouseDirection));
+
+
 	//行列更新
 	//worldTransform_.matWorld_ = MakeAffineMatrix(worldTransform_.scale_, worldTransform_.rotation_, worldTransform_.translation_);
 	
@@ -123,8 +172,11 @@ void Player::Update(const ViewProjection& viewProjection) {
 	worldTransform3DReticle_.TransferMatrix();
 
 	//キャラクターの座標を画面表示する処理
-	ImGui::Begin("Debug1");
-	ImGui::Text("Kamata Tarou %.02f,%.02f,%.02f", worldTransform_.translation_.x, worldTransform_.translation_.y, worldTransform_.translation_.z);
+	ImGui::Begin("Player");
+	ImGui::Text("2DReticle:(%f,%f)", positionReticle.x, positionReticle.y);
+	ImGui::Text("Near:(%+.2f,%+.2f,%+.2f)", posNear.x, posNear.y, posNear.z);
+	ImGui::Text("Far:(%+.2f,%+.2f,%+.2f)", posFar.x, posFar.y, posFar.z);
+	ImGui::Text("3DReticle:(%+.2f,%+.2f,%+.2f)", worldTransform3DReticle_.translation_.x, worldTransform3DReticle_.translation_.y, worldTransform3DReticle_.translation_.z);
 	ImGui::End();
 
 	
@@ -145,7 +197,15 @@ void Player::Rotate() {
 
 
 void Player::Attack() {
-	if (input_->TriggerKey(DIK_SPACE)) {
+
+	XINPUT_STATE joyState;
+	//ゲームパッド未接続なら何もせず抜ける
+	if (!Input::GetInstance()->GetJoystickState(0, joyState)) {
+		//return;
+	}
+
+	if (input_->TriggerKey(DIK_SPACE) || 
+		joyState.Gamepad.wButtons&XINPUT_GAMEPAD_RIGHT_SHOULDER) {
 		
 		//弾の速度
 		const float kBulletSpeed = 1.0f;
@@ -169,7 +229,6 @@ void Player::Attack() {
 
 void Player::Draw(ViewProjection& viewProjection) { 
 	model_->Draw(worldTransform_, viewProjection, textureHandle_);
-	model_->Draw(worldTransform3DReticle_, viewProjection, textureReticle); 
 
 	//弾描画
 	for (PlayerBullet* bullet : bullets_) {
