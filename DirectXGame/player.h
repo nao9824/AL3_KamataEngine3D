@@ -34,6 +34,8 @@ public:
 	///< summary>
 	void Attack();
 
+	void SpecialAttack();
+
 	///< summary>
 	/// 描画
 	///< summary>
@@ -43,6 +45,7 @@ public:
 
 	//衝突を検出したら呼び出されるコールバック関数
 	void OnCollision();
+	bool IsDead() const { return isDead_; }
 
 	//弾リストを取得
 	const std::list<PlayerBullet*>& GetBullets() const { return bullets_; }
@@ -69,9 +72,12 @@ private:
 	Sprite* sprite2DReticle_ = nullptr;
 	//キーボード入力
 	Input* input_ = nullptr;
+	int32_t hp_;
+	// デスフラグ
+	bool isDead_ = false;
 	//弾
 	PlayerBullet* bullet_ = nullptr;
 	std::list<PlayerBullet*> bullets_;
 	//Vector3 playerPosition_ = {0.0f, 0.0f, 50.0f};
-	
+	int32_t bulletNum_;
 };

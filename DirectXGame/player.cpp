@@ -15,6 +15,8 @@ void Player::Initialize(Model* model, uint32_t textureHandle, Vector3 playerPosi
 	worldTransform_.Initialize();
 	worldTransform_.translation_ = playerPosition;
 
+	hp_ = 5;
+
 	//3Dレティクルのワールドトランスフォーム初期化
 	worldTransform3DReticle_.Initialize();
 
@@ -27,6 +29,7 @@ void Player::Initialize(Model* model, uint32_t textureHandle, Vector3 playerPosi
 	//スプライト生成
 	sprite2DReticle_ = Sprite::Create(textureReticle, {0, 0}, {1,1,1,1},{0.5,0.5});
 
+	bulletNum_ = 10;
 }
 
 Player::~Player() { 
@@ -177,6 +180,8 @@ void Player::Update(const ViewProjection& viewProjection) {
 	ImGui::Text("Near:(%+.2f,%+.2f,%+.2f)", posNear.x, posNear.y, posNear.z);
 	ImGui::Text("Far:(%+.2f,%+.2f,%+.2f)", posFar.x, posFar.y, posFar.z);
 	ImGui::Text("3DReticle:(%+.2f,%+.2f,%+.2f)", worldTransform3DReticle_.translation_.x, worldTransform3DReticle_.translation_.y, worldTransform3DReticle_.translation_.z);
+	ImGui::Text("HP:%d", hp_);
+
 	ImGui::End();
 
 	
@@ -204,27 +209,71 @@ void Player::Attack() {
 		//return;
 	}
 
-	if (input_->TriggerKey(DIK_SPACE) || 
-		joyState.Gamepad.wButtons&XINPUT_GAMEPAD_RIGHT_SHOULDER) {
+	if (hp_>0 && (input_->TriggerKey(DIK_SPACE) || 
+		joyState.Gamepad.wButtons&XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
+		if (bulletNum_ > 0) {
+			bulletNum_--;
+			// 弾の速度
+			const float kBulletSpeed = 1.0f;
+			Vector3 velocity(0, 0, kBulletSpeed);
+
+			// 速度ベクトルを自機の向きに合わせて回転させる
+			// velocity = TransformNormal(velocity, worldTransform_.matWorld_);
+
+			// 自機から照準オブジェクトへのベクトル
+			velocity = Subtract(GetWorldPosition3D(), GetWorldPosition());
+			velocity = vectorMultiply(kBulletSpeed, Normalize(velocity));
+
+			// 弾を生成し、初期化
+			PlayerBullet* newBullet = new PlayerBullet();
+			newBullet->Initialize(model_, GetWorldPosition(), velocity);
+
+			// 弾を登録する
+			bullets_.push_back(newBullet);
+		} else {
+			hp_--;
+			SpecialAttack();
+		}
+
+		if (hp_ <= 0) {
+			isDead_ = true;
+		}
 		
-		//弾の速度
-		const float kBulletSpeed = 1.0f;
-		Vector3 velocity(0, 0, kBulletSpeed);
-
-		//速度ベクトルを自機の向きに合わせて回転させる
-		//velocity = TransformNormal(velocity, worldTransform_.matWorld_);
-		
-		//自機から照準オブジェクトへのベクトル
-		velocity = Subtract(GetWorldPosition3D(), GetWorldPosition());
-		velocity = vectorMultiply(kBulletSpeed, Normalize(velocity));
-
-		//弾を生成し、初期化
-		PlayerBullet* newBullet = new PlayerBullet();
-		newBullet->Initialize(model_, GetWorldPosition(), velocity);
-
-		//弾を登録する
-		bullets_.push_back(newBullet);
 	}
+}
+
+void Player::SpecialAttack() {
+	// 弾の速度
+	const float kBulletSpeed1 = 2.0f;
+	const float kBulletSpeed2 = 2.0f;
+	const float kBulletSpeed3 = 2.0f;
+	Vector3 velocity1(0, 0, kBulletSpeed1);
+	Vector3 velocity2(0, 0, kBulletSpeed2);
+	Vector3 velocity3(0, 0, kBulletSpeed2);
+
+	// 速度ベクトルを自機の向きに合わせて回転させる
+	// velocity = TransformNormal(velocity, worldTransform_.matWorld_);
+
+	// 自機から照準オブジェクトへのベクトル
+	velocity1 = Subtract(GetWorldPosition3D(), GetWorldPosition());
+	velocity1 = vectorMultiply(kBulletSpeed1, Normalize(velocity1));
+	velocity2 = Subtract(GetWorldPosition3D(), GetWorldPosition());
+	velocity2 = vectorMultiply(kBulletSpeed2, Normalize(velocity2));
+	velocity3 = Subtract(GetWorldPosition3D(), GetWorldPosition());
+	velocity3 = vectorMultiply(kBulletSpeed3, Normalize(velocity3));
+
+	// 弾を生成し、初期化
+	PlayerBullet* newBullet1 = new PlayerBullet();
+	PlayerBullet* newBullet2 = new PlayerBullet();
+	PlayerBullet* newBullet3 = new PlayerBullet();
+	newBullet1->Initialize(model_, GetWorldPosition(), velocity1);
+	newBullet2->Initialize(model_, Add(GetWorldPosition(), {-3, 1, 0}), velocity2);
+	newBullet3->Initialize(model_, Add(GetWorldPosition(), {3,1,0}), velocity3);
+
+	// 弾を登録する
+	bullets_.push_back(newBullet1);
+	bullets_.push_back(newBullet2);
+	bullets_.push_back(newBullet3);
 }
 
 void Player::Draw(ViewProjection& viewProjection) { 
@@ -238,7 +287,12 @@ void Player::Draw(ViewProjection& viewProjection) {
 
 void Player::DrawUI() { sprite2DReticle_->Draw(); }
 
-void Player::OnCollision() {}
+void Player::OnCollision() {
+	hp_--;
+	if (hp_ <= 0) {
+		isDead_ = true;
+	}
+}
 
 Vector3 Player::GetWorldPosition() { 
 	//ワールド座標を入れる変数

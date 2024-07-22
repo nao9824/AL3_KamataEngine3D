@@ -43,7 +43,10 @@ void EnemyBullet::Draw(const ViewProjection& viewProjection) {
 	model_->Draw(worldTransform_, viewProjection, textureHandle_);
 }
 
-void EnemyBullet::OnCollision() { isDead_ = true; }
+void EnemyBullet::OnCollision() { 
+	/*isDead_ = true;*/
+	velocity_.z = -velocity_.z;
+}
 
 Vector3 EnemyBullet::GetWorldPosition() {
 	// ワールド座標を入れる変数

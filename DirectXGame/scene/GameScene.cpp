@@ -20,6 +20,8 @@ GameScene::~GameScene() {
 	for (EnemyBullet* bullet : enemyBullets_) {
 		delete bullet;
 	}
+	delete boss_;
+	delete modelBoss_;
 }
 
 void GameScene::Initialize() {
@@ -54,6 +56,12 @@ void GameScene::Initialize() {
 	//レールカメラの生成
 	railcamera_ = new RaillCamera();
 	railcamera_->Initialize(railPosition_,railRotate_);
+	// ボス
+	boss_ = new Boss();
+	// 3Dモデルの生成
+	modelBoss_ = Model::CreateFromOBJ("clock", true);
+	Vector3 bossPosition(0, 0, 100);
+	boss_->Initialize(modelBoss_,textureHandle_,bossPosition);
 	//軸方向表示の意思を有効にする
 	AxisIndicator::GetInstance()->SetVisible(true);
 	//軸方向表示が参照するビュープロジェクションを指定する(アドレス渡し)
@@ -92,9 +100,23 @@ void GameScene::Update() {
 
 	CheckAllCollisions();
 	//自キャラの更新
-	player_->Update(viewProjection_);
+	if (player_ != nullptr) {
+
+		player_->Update(viewProjection_);
+		if (player_->IsDead()) {
+			delete player_;
+			player_ = nullptr;
+
+			for (Enemy* enemy : enemys_) {
+				enemy->SetPlayer(player_);
+			}
+
+		}
+	}
 	//スカイドームの更新
 	skydome_->Update();
+	// ボスの更新
+	boss_->Update();
 
 	#ifdef _DEBUG
 	if (input_->TriggerKey(DIK_E)) {
@@ -121,9 +143,12 @@ void GameScene::Update() {
 	//ビュープロジェクション行列の更新と転送
 		viewProjection_.TransferMatrix();
 	}
-	for (Enemy* enemy : enemys_) {
-		
-		enemy->Update();
+	if (player_ != nullptr) {
+
+		for (Enemy* enemy : enemys_) {
+
+			enemy->Update();
+		}
 	}
 	// 弾の更新処理
 	for (EnemyBullet* bullet : enemyBullets_) {
@@ -160,15 +185,23 @@ void GameScene::Draw() {
 
 	// スカイドームの描画
 	skydome_->Draw(viewProjection_);
+	// ボスの描画
+	boss_->Draw(viewProjection_);
 	//自キャラの描画
-	player_->Draw(viewProjection_);
+	if (player_ != nullptr) {
+
+		if (player_->IsDead() == false) {
+
+			player_->Draw(viewProjection_);
+		}
+	}
 	//敵キャラの描画
 	
 		for (Enemy* enemy : enemys_) {
 
 			enemy->Draw(viewProjection_);
 		}
-	
+
 	// 弾描画
 	for (EnemyBullet* bullet : enemyBullets_) {
 		bullet->Draw(viewProjection_);
@@ -182,8 +215,10 @@ void GameScene::Draw() {
 	// 前景スプライト描画前処理
 	Sprite::PreDraw(commandList);
 
-	
-	player_->DrawUI();
+	if (player_ != nullptr) {
+
+		player_->DrawUI();
+	}
 
 	/// <summary>
 	/// ここに前景スプライトの描画処理を追加できる
@@ -196,75 +231,77 @@ void GameScene::Draw() {
 }
 
 void GameScene::CheckAllCollisions() {
-//判定対象AとBの座標
-	Vector3 posA, posB;
+	if (player_ != nullptr) {
 
-	//自弾リストの取得
-	const std::list<PlayerBullet*>& playerBullets = player_->GetBullets();
-	//敵弾リストの取得
-	const std::list<EnemyBullet*>& enemyBullets = GetBullets();
+		// 判定対象AとBの座標
+		Vector3 posA, posB;
 
-	#pragma region //自キャラと敵弾の当たり判定
-	#pragma endregion
-	
-	//自キャラと敵弾全ての当たり判定
-	for (EnemyBullet* bullet : enemyBullets) {
-		// 自キャラの座標
-		posA = player_->GetWorldPosition();
-		// 敵弾の座標
-		posB = bullet->GetWorldPosition();
+		// 自弾リストの取得
+		const std::list<PlayerBullet*>& playerBullets = player_->GetBullets();
+		// 敵弾リストの取得
+		const std::list<EnemyBullet*>& enemyBullets = GetBullets();
 
-		if ((posB.x - posA.x) * (posB.x - posA.x) + 
-			(posB.y - posA.y) * (posB.y - posA.y) + 
-			(posB.z - posA.z) * (posB.z - posA.z) <= (playerRadius_ + enemyRadius_) * (playerRadius_ + enemyRadius_)) {
+#pragma region // 自キャラと敵弾の当たり判定
+#pragma endregion
 
-			// 自キャラの衝突時コールバックを呼び出す
-			player_->OnCollision();
-			// 敵弾の衝突時コールバックを呼び出す
-			bullet->OnCollision();
-		}
-	}
-
-	#pragma region // 自弾と敵キャラの当たり判定
-    #pragma endregion
-	
-	// 自弾と敵キャラ全ての当たり判定
-	for (PlayerBullet* bullet : playerBullets) {
-		// 自弾の座標
-		posA = bullet->GetWorldPosition();
-		for (Enemy* enemy : enemys_) {
-
-			// 敵キャラの座標
-			posB = enemy->GetWorldPosition();
+		// 自キャラと敵弾全ての当たり判定
+		for (EnemyBullet* bullet : enemyBullets) {
+			// 自キャラの座標
+			posA = player_->GetWorldPosition();
+			// 敵弾の座標
+			posB = bullet->GetWorldPosition();
 
 			if ((posB.x - posA.x) * (posB.x - posA.x) + (posB.y - posA.y) * (posB.y - posA.y) + (posB.z - posA.z) * (posB.z - posA.z) <=
 			    (playerRadius_ + enemyRadius_) * (playerRadius_ + enemyRadius_)) {
 
-				// 自弾の衝突時コールバックを呼び出す
- 				bullet->OnCollision();
-				// 敵キャラの衝突時コールバックを呼び出す
-				enemy->OnCollision();
+				// 自キャラの衝突時コールバックを呼び出す
+				player_->OnCollision();
+				// 敵弾の衝突時コールバックを呼び出す
+				bullet->OnCollision();
 			}
 		}
-	}
-	#pragma region // 自弾と敵弾の当たり判定
-    #pragma endregion
-	// 自弾と敵弾全ての当たり判定
-	for (PlayerBullet* Pbullet : playerBullets) {
-		for (EnemyBullet* Ebullet : enemyBullets) {
 
+#pragma region // 自弾と敵キャラの当たり判定
+#pragma endregion
+
+		// 自弾と敵キャラ全ての当たり判定
+		for (PlayerBullet* bullet : playerBullets) {
 			// 自弾の座標
-			posA = Pbullet->GetWorldPosition();
-			// 敵弾の座標
-			posB = Ebullet->GetWorldPosition();
+			posA = bullet->GetWorldPosition();
+			for (Enemy* enemy : enemys_) {
 
-			if ((posB.x - posA.x) * (posB.x - posA.x) + (posB.y - posA.y) * (posB.y - posA.y) + (posB.z - posA.z) * (posB.z - posA.z) <=
-			    (playerRadius_ + enemyRadius_) * (playerRadius_ + enemyRadius_)) {
+				// 敵キャラの座標
+				posB = enemy->GetWorldPosition();
 
-				// 自弾の衝突時コールバックを呼び出す
-				Pbullet->OnCollision();
-				// 敵弾の衝突時コールバックを呼び出す
-				Ebullet->OnCollision();
+				if ((posB.x - posA.x) * (posB.x - posA.x) + (posB.y - posA.y) * (posB.y - posA.y) + (posB.z - posA.z) * (posB.z - posA.z) <=
+				    (playerRadius_ + enemyRadius_) * (playerRadius_ + enemyRadius_)) {
+
+					// 自弾の衝突時コールバックを呼び出す
+					bullet->OnCollision();
+					// 敵キャラの衝突時コールバックを呼び出す
+					enemy->OnCollision();
+				}
+			}
+		}
+#pragma region // 自弾と敵弾の当たり判定
+#pragma endregion
+		// 自弾と敵弾全ての当たり判定
+		for (PlayerBullet* Pbullet : playerBullets) {
+			for (EnemyBullet* Ebullet : enemyBullets) {
+
+				// 自弾の座標
+				posA = Pbullet->GetWorldPosition();
+				// 敵弾の座標
+				posB = Ebullet->GetWorldPosition();
+
+				if ((posB.x - posA.x) * (posB.x - posA.x) + (posB.y - posA.y) * (posB.y - posA.y) + (posB.z - posA.z) * (posB.z - posA.z) <=
+				    (playerRadius_ + enemyRadius_) * (playerRadius_ + enemyRadius_)) {
+
+					// 自弾の衝突時コールバックを呼び出す
+					Pbullet->OnCollision();
+					// 敵弾の衝突時コールバックを呼び出す
+					Ebullet->OnCollision();
+				}
 			}
 		}
 	}
@@ -285,15 +322,18 @@ file.open("Resources/enemyPop.csv");
 }
 
 void GameScene::enemyHassei(Vector3 position) { 
-	Enemy* newEnemy = new Enemy();
-	newEnemy->Initialize(model_, position, ApproachVelocity_, LeaveVelocity_);
-	// 敵キャラに自キャラのアドレスを渡す
-	newEnemy->SetPlayer(player_);
+	if (player_ != nullptr) {
 
-	// 敵キャラにゲームシーンを渡す
-	newEnemy->SetGameScene(this);
+		Enemy* newEnemy = new Enemy();
+		newEnemy->Initialize(model_, position, ApproachVelocity_, LeaveVelocity_);
+		// 敵キャラに自キャラのアドレスを渡す
+		newEnemy->SetPlayer(player_);
 
-	enemys_.push_back(newEnemy);
+		// 敵キャラにゲームシーンを渡す
+		newEnemy->SetGameScene(this);
+
+		enemys_.push_back(newEnemy);
+	}
 
 }
 

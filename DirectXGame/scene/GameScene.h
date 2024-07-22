@@ -15,6 +15,7 @@
 #include "RailCamera.h"
 #include <list>
 #include <sstream>
+#include "boss.h"
 
 /// <summary>
 /// ゲームシーン
@@ -113,4 +114,9 @@ private: // メンバ変数
 	bool isDebugCameraActive_ = false;
 	//デバッグカメラ
 	DebugCamera* debugCamera_ = nullptr;
+
+	//ボス
+	Boss* boss_ = nullptr;
+	//ボス3Dモデル
+	Model* modelBoss_ = nullptr;
 };
