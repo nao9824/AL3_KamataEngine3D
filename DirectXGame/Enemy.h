@@ -14,7 +14,7 @@ public:
 	///< summary>
 	/// 初期化
 	///< summary>
-	void Initialize(Model* model, const Vector3& position, const Vector3& ApproachVelocity, const Vector3& LeaveVelocity);
+	void Initialize(Model* model, Model* bulletModel, const Vector3& position, const Vector3& ApproachVelocity, const Vector3& LeaveVelocity);
 
 	///< summary>
 	/// デストラクタ
@@ -46,6 +46,8 @@ public:
 	/// getter
 	/// </summary>
 	bool IsDead() const { return isDead_; }
+
+	//void Stop(float time);
 	
 /// <summary>
 /// 弾発射
@@ -56,7 +58,7 @@ public:
 	void OnCollision();
 
 	//発射間隔
-	static const int kFireIntervel = 60;
+	static const int kFireIntervel = 120;
 
 	void SetPlayer(Player* player) { player_ = player; }
 	void SetGameScene(GameScene* gameScene) { gameScene_ = gameScene; }
@@ -69,6 +71,7 @@ private:
 	WorldTransform worldTransform_;
 	// モデル
 	Model* model_ = nullptr;
+	Model* bulletModel_ = nullptr;
 	// テクスチャハンドル
 	uint32_t textureHandle_ = 0u;
 	// 速度
@@ -92,4 +95,5 @@ private:
 	Vector3 nsVector_;
 	// デスフラグ
 	bool isDead_ = false;
+	//bool isStop = false;
 };

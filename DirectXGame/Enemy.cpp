@@ -6,11 +6,12 @@
 #include "Player.h"
 #include "GameScene.h"
 
-void Enemy::Initialize(Model* model, const Vector3& position, const Vector3& ApproachVelocity, const Vector3& LeaveVelocity) {
+void Enemy::Initialize(Model* model,Model* bulletModel, const Vector3& position, const Vector3& ApproachVelocity, const Vector3& LeaveVelocity) {
 	// NULLポインタチェック
 	assert(model);
 
 	model_ = model;
+	bulletModel_ = bulletModel;
 	// テクスチャ読み込み
 	textureHandle_ = TextureManager::Load("gensokuhiyaemon.png");
 
@@ -31,42 +32,38 @@ Enemy::~Enemy() {
 }
 
 void Enemy::Update() { 
-	approachUpdate();
+	//if (isStop == false) {
 
-	
+		approachUpdate();
 
-	switch (phase_) { 
-	case Phase::Approach:
-	default:
-		// 座標を移動させる
-		worldTransform_.translation_.x += ApproachVelocity_.x;
-		worldTransform_.translation_.y += ApproachVelocity_.y;
-		worldTransform_.translation_.z += ApproachVelocity_.z;
-		//既定の位置に到達したら離脱
-		if (worldTransform_.translation_.z < 0.0f) {
-			phase_ = Phase::Leave;
+		switch (phase_) {
+		case Phase::Approach:
+		default:
+			// 座標を移動させる
+			worldTransform_.translation_.x += ApproachVelocity_.x;
+			worldTransform_.translation_.y += ApproachVelocity_.y;
+			worldTransform_.translation_.z += ApproachVelocity_.z;
+			// 既定の位置に到達したら離脱
+			if (worldTransform_.translation_.z < 0.0f) {
+				phase_ = Phase::Leave;
+			}
+			break;
+		case Phase::Leave:
+			// 座標を移動させる
+			worldTransform_.translation_.x += LeaveVelocity_.x;
+			worldTransform_.translation_.y += LeaveVelocity_.y;
+			worldTransform_.translation_.z += LeaveVelocity_.z;
+			break;
 		}
-		break;
-	case Phase::Leave:
-		// 座標を移動させる
-		worldTransform_.translation_.x += LeaveVelocity_.x;
-		worldTransform_.translation_.y += LeaveVelocity_.y;
-		worldTransform_.translation_.z += LeaveVelocity_.z;
-		break;
-	}
 
-	
-	// ワールドトランスフォームの更新
-	worldTransform_.UpdateMatrix();
-
-	
-
-	
+		// ワールドトランスフォームの更新
+		worldTransform_.UpdateMatrix();
+	//}
 }
 
 void Enemy::Draw(const ViewProjection& viewProjection) {
 	// モデルの描画
-	model_->Draw(worldTransform_, viewProjection, textureHandle_);
+	model_->Draw(worldTransform_, viewProjection);
 
 	
 }
@@ -89,6 +86,17 @@ void Enemy::approachUpdate() {
 
 }
 
+//void Enemy::Stop(float time) { 
+//	time--;
+//	if (time >= 0) {
+//		isStop = true;
+//	}
+//	if (time < 0) {
+//		isStop = false;
+//	}
+//
+//}
+
 void Enemy::Fire() {
 	assert(player_);
 	// 弾の速度
@@ -108,7 +116,7 @@ void Enemy::Fire() {
 
 	// 弾を生成し、初期化
 	EnemyBullet* newBullet = new EnemyBullet();
-	newBullet->Initialize(model_, worldTransform_.translation_, velocity);
+	newBullet->Initialize(bulletModel_, worldTransform_.translation_, velocity);
 
 	// 弾を登録する
 	//enemyBullets_.push_back(newBullet);

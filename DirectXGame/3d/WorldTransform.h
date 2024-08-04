@@ -2,6 +2,7 @@
 
 #include "Matrix4x4.h"
 #include "Vector3.h"
+#include "Vector2.h"
 #include <d3d12.h>
 #include <type_traits>
 #include <wrl.h>

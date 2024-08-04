@@ -40,12 +40,12 @@ void EnemyBullet::Update() {
 
 void EnemyBullet::Draw(const ViewProjection& viewProjection) {
 	// モデルの描画
-	model_->Draw(worldTransform_, viewProjection, textureHandle_);
+	model_->Draw(worldTransform_, viewProjection);
 }
 
 void EnemyBullet::OnCollision() { 
-	/*isDead_ = true;*/
-	velocity_.z = -velocity_.z;
+	isDead_ = true;
+	//velocity_.z = -velocity_.z;
 }
 
 Vector3 EnemyBullet::GetWorldPosition() {

@@ -5,11 +5,12 @@
 #include "Sprite.h"
 #include "WinApp.h"
 
-void Player::Initialize(Model* model, uint32_t textureHandle, Vector3 playerPosition) {
+void Player::Initialize(Model* model, Model* bulletModel, uint32_t textureHandle, Vector3 playerPosition) {
 	//NULLポインタチェック
 	assert(model);
 
 	model_ = model;
+	bulletModel_ = bulletModel;
 	textureHandle_ = textureHandle;
 
 	worldTransform_.Initialize();
@@ -27,9 +28,10 @@ void Player::Initialize(Model* model, uint32_t textureHandle, Vector3 playerPosi
 	textureReticle = TextureManager::Load("reticle.png");
 
 	//スプライト生成
-	sprite2DReticle_ = Sprite::Create(textureReticle, {0, 0}, {1,1,1,1},{0.5,0.5});
+	sprite2DReticle_ = Sprite::Create(textureReticle, {640, 360}, {1,1,1,1},{0.5,0.5});
 
 	bulletNum_ = 10;
+	bulletTimer_ = 0;
 }
 
 Player::~Player() { 
@@ -71,8 +73,7 @@ void Player::Update(const ViewProjection& viewProjection) {
 	//スプライトの現在座標を取得
 	Vector2 spritePosition = sprite2DReticle_->GetPosition();
 
-	//XINPUT_STATE joyState;
-
+	
 	//ジョイスティック状態取得
 	if (Input::GetInstance()->GetJoystickState(0, joyState)) {
 		spritePosition.x += (float)joyState.Gamepad.sThumbRX / SHRT_MAX * 5.0f;
@@ -136,23 +137,23 @@ void Player::Update(const ViewProjection& viewProjection) {
 	//ワールド→スクリーン座標変換(ここで3Dから2Dになる)
 	positionReticle = Transform(positionReticle, matViewProjectionViewport);
 	//スプライトのレティクルに座標設定
-	sprite2DReticle_->SetPosition(Vector2(positionReticle.x, positionReticle.y));
+	//sprite2DReticle_->SetPosition(Vector2(positionReticle.x, positionReticle.y));
 
 	//マウスカーソルのスクリーン座標からワールド座標を取得して3Dレティクル配置
-	POINT mousePosition;
+	//POINT mousePosition;
 	//マウス座標を取得
-	GetCursorPos(&mousePosition);
+	//GetCursorPos(&mousePosition);
 	//クライアントエリア座標に変換する
-	HWND hwnd = WinApp::GetInstance()->GetHwnd();
-	ScreenToClient(hwnd, &mousePosition);//ここでマウスポジをクライアントエリアに変換してる
-	sprite2DReticle_->SetPosition(Vector2((float)mousePosition.x,(float)mousePosition.y));
+	//HWND hwnd = WinApp::GetInstance()->GetHwnd();
+	//ScreenToClient(hwnd, &mousePosition);//ここでマウスポジをクライアントエリアに変換してる
+	//sprite2DReticle_->SetPosition(Vector2((float)mousePosition.x,(float)mousePosition.y));
 	//ビュープロジェクションビューポート行列
 	Matrix4x4 matVPV = matrixMultiply(matrixMultiply(viewProjection.matView, viewProjection.matProjection), matViewport);
 	//合成行列の逆行列を計算する
 	Matrix4x4 matInverseVPV = Inverse(matVPV);
 	//スクリーン座標
-	Vector3 posNear = Vector3((float)mousePosition.x, (float)mousePosition.y, 0);
-	Vector3 posFar = Vector3((float)mousePosition.x, (float)mousePosition.y, 1);
+	Vector3 posNear = Vector3((float)sprite2DReticle_->GetPosition().x, (float)sprite2DReticle_->GetPosition().y, 0);
+	Vector3 posFar = Vector3((float)sprite2DReticle_->GetPosition().x, (float)sprite2DReticle_->GetPosition().y, 1);
 	//スクリーン座標系からワールド座標系へ
 	posNear = Transform(posNear, matInverseVPV);
 	posFar = Transform(posFar, matInverseVPV);
@@ -160,7 +161,7 @@ void Player::Update(const ViewProjection& viewProjection) {
 	Vector3 mouseDirection = Subtract(posFar, posNear);
 	mouseDirection = Normalize(mouseDirection);
 	//カメラから標準オブジェクトの距離
-	const float kDistanceTestObject = 70;
+	const float kDistanceTestObject = 130;
 	worldTransform3DReticle_.translation_ = Add(posNear, vectorMultiply(kDistanceTestObject, mouseDirection));
 
 
@@ -175,14 +176,14 @@ void Player::Update(const ViewProjection& viewProjection) {
 	worldTransform3DReticle_.TransferMatrix();
 
 	//キャラクターの座標を画面表示する処理
-	ImGui::Begin("Player");
+	/*ImGui::Begin("Player");
 	ImGui::Text("2DReticle:(%f,%f)", positionReticle.x, positionReticle.y);
 	ImGui::Text("Near:(%+.2f,%+.2f,%+.2f)", posNear.x, posNear.y, posNear.z);
 	ImGui::Text("Far:(%+.2f,%+.2f,%+.2f)", posFar.x, posFar.y, posFar.z);
 	ImGui::Text("3DReticle:(%+.2f,%+.2f,%+.2f)", worldTransform3DReticle_.translation_.x, worldTransform3DReticle_.translation_.y, worldTransform3DReticle_.translation_.z);
-	ImGui::Text("HP:%d", hp_);
+	ImGui::Text("hp:%d", hp_);
 
-	ImGui::End();
+	ImGui::End();*/
 
 	
 }
@@ -202,16 +203,17 @@ void Player::Rotate() {
 
 
 void Player::Attack() {
-
+	bulletTimer_++;
 	XINPUT_STATE joyState;
 	//ゲームパッド未接続なら何もせず抜ける
 	if (!Input::GetInstance()->GetJoystickState(0, joyState)) {
 		//return;
 	}
 
-	if (hp_>0 && (input_->TriggerKey(DIK_SPACE) || 
-		joyState.Gamepad.wButtons&XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
-		if (bulletNum_ > 0) {
+	if ((hp_>0 && (input_->TriggerKey(DIK_SPACE) || 
+		joyState.Gamepad.wButtons&XINPUT_GAMEPAD_RIGHT_SHOULDER)) && bulletTimer_ % 15 == 0) {
+		
+		if (bulletNum_ > 3) {
 			bulletNum_--;
 			// 弾の速度
 			const float kBulletSpeed = 1.0f;
@@ -226,17 +228,17 @@ void Player::Attack() {
 
 			// 弾を生成し、初期化
 			PlayerBullet* newBullet = new PlayerBullet();
-			newBullet->Initialize(model_, GetWorldPosition(), velocity);
+			newBullet->Initialize(bulletModel_, GetWorldPosition(), velocity);
 
 			// 弾を登録する
 			bullets_.push_back(newBullet);
-		} else {
-			hp_--;
+		} else if (bulletNum_ <= 3 && bulletNum_ >0) {
+			bulletNum_--;
 			SpecialAttack();
 		}
 
-		if (hp_ <= 0) {
-			isDead_ = true;
+		if (bulletNum_ <= 0) {
+			bulletNum_ = 10;
 		}
 		
 	}
@@ -266,9 +268,9 @@ void Player::SpecialAttack() {
 	PlayerBullet* newBullet1 = new PlayerBullet();
 	PlayerBullet* newBullet2 = new PlayerBullet();
 	PlayerBullet* newBullet3 = new PlayerBullet();
-	newBullet1->Initialize(model_, GetWorldPosition(), velocity1);
-	newBullet2->Initialize(model_, Add(GetWorldPosition(), {-3, 1, 0}), velocity2);
-	newBullet3->Initialize(model_, Add(GetWorldPosition(), {3,1,0}), velocity3);
+	newBullet1->Initialize(bulletModel_, GetWorldPosition(), velocity1);
+	newBullet2->Initialize(bulletModel_, Add(GetWorldPosition(), {-3, 1, 0}), velocity2);
+	newBullet3->Initialize(bulletModel_, Add(GetWorldPosition(), {3, 1, 0}), velocity3);
 
 	// 弾を登録する
 	bullets_.push_back(newBullet1);
@@ -277,7 +279,7 @@ void Player::SpecialAttack() {
 }
 
 void Player::Draw(ViewProjection& viewProjection) { 
-	model_->Draw(worldTransform_, viewProjection, textureHandle_);
+	model_->Draw(worldTransform_, viewProjection);
 
 	//弾描画
 	for (PlayerBullet* bullet : bullets_) {
@@ -291,6 +293,12 @@ void Player::OnCollision() {
 	hp_--;
 	if (hp_ <= 0) {
 		isDead_ = true;
+	}
+}
+
+void Player::bulletPuls() {
+	if (hp_ < 5) {
+		hp_++;
 	}
 }
 
@@ -320,5 +328,11 @@ Vector3 Player::GetWorldPosition3D() {
 void Player::SetParent(const WorldTransform* parent) {
 //親子関係を結ぶ
 	worldTransform_.parent_ = parent;
+}
+
+void Player::bossDead() {
+	if (worldTransform_.rotation_.y <= 360) {
+		worldTransform_.rotation_.y++;
+	}
 }
 

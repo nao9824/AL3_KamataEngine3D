@@ -1,6 +1,6 @@
 #include "RailCamera.h"
 #include "mathFunction.h"
-#include "imgui.h"
+//#include "imgui.h"
 
 void RaillCamera::Initialize(const Vector3& position, const Vector3& rotate) {
 	// ワールドトランスフォームの初期設定
@@ -27,9 +27,9 @@ void RaillCamera::Update() {
 	worldTransform_.matWorld_ = MakeAffineMatrix(worldTransform_.scale_, worldTransform_.rotation_, worldTransform_.translation_);
 
 	//カメラの座標を画面表示する処理
-	ImGui::Begin("Camera");
+	/*ImGui::Begin("Camera");
 	ImGui::DragFloat3("CameraTranslate", &worldTransform_.translation_.x, 0.01f);
 	ImGui::DragFloat3("CameraRotate", &worldTransform_.rotation_.x, 0.01f);
-	ImGui::End();
+	ImGui::End();*/
 
 }

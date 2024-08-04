@@ -16,7 +16,7 @@ public:
 	///< summary>
 	/// 初期化
 	///< summary>
-	void Initialize(Model* model, uint32_t textureHandle, Vector3 playerPosition);
+	void Initialize(Model* model, Model* bulletModel, uint32_t textureHandle, Vector3 playerPosition);
 
 	///< summary>
 	/// デストラクタ
@@ -50,12 +50,18 @@ public:
 	//弾リストを取得
 	const std::list<PlayerBullet*>& GetBullets() const { return bullets_; }
 
+	//雑魚敵に当たったら弾を増やす
+	void bulletPuls();
+
 	// ワールド座標を取得
 	Vector3 GetWorldPosition();
 	Vector3 GetWorldPosition3D();
 
 	//親となるワールドトランスフォームをセット
 	void SetParent(const WorldTransform* parent);
+
+	//ボスが死んだ後の演出
+	void bossDead();
 
 private:
 	//ワールドデータ変換
@@ -64,6 +70,7 @@ private:
 	WorldTransform worldTransform3DReticle_;
 	//モデル
 	Model* model_ = nullptr;
+	Model* bulletModel_ = nullptr;
 	//テクスチャハンドル
 	uint32_t textureHandle_ = 0u;
 	uint32_t textureReticle = 0u;
@@ -80,4 +87,5 @@ private:
 	std::list<PlayerBullet*> bullets_;
 	//Vector3 playerPosition_ = {0.0f, 0.0f, 50.0f};
 	int32_t bulletNum_;
+	int bulletTimer_;
 };

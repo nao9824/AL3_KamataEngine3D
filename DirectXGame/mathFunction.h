@@ -5,6 +5,7 @@
 Vector3 Add(Vector3 v1, Vector3 v2);
 // ベクトルとベクトルの引き算
 Vector3 Subtract(const Vector3& v1, const Vector3& v2);
+Vector2 vector2Subtract(const Vector2& v1, const Vector2& v2);
 // 正規化
 Vector3 Normalize(const Vector3& v);
 // 拡大縮小行列
